@@ -192,3 +192,26 @@ Leave everything as default and click **Configure Details**
 On the next step, give your rule a name, a description, then click **Create**.
 
 ![CodeStart Step 1](https://i.imgur.com/H2qX4n0.png)
+
+## Checking the logs
+
+To check the execution logs of your bot and make sure everythign is working as expected, in your AWS console open CloudWatch.
+
+On the left click *Logs* then look for the log starting with */aws/lambda/awscodestar-* + the name of your bot.
+
+If you don't find a log group for your bot, that means your bot hasn't been executed yet.
+
+Wait for it to execute or execute it manually or via a test to start creating logs.
+
+## Finding your bot's GET endpoint to trigger it manually
+
+In your AWS console open *API Gateway*.
+Look for the name of your bot and go to *Stages*.
+
+Click "Prod", and you'll find your endpoint's url:
+
+![CodeStart Step 1](https://i.imgur.com/DbSbllH.png)
+
+Open that url in your browser to execute the bot.
+
+The bot doesn't return anything as an HTTP response right now, you you should get `{}` as a response.
