@@ -1,66 +1,146 @@
-Welcome to the AWS CodeStar sample web service
-==============================================
+# Lazy Trader
 
-This sample code helps get you started with a simple Express web service
-deployed by AWS CloudFormation to AWS Lambda and Amazon API Gateway.
+A trading strategy shared by [kjmsb2](https://www.reddit.com/user/kjmsb2) on [this post](https://www.reddit.com/r/Forex/comments/b1tuhb/a_lazy_way_to_trade_forex/).
 
-What's Here
+------------
+
+I have been using this method for a while with pretty consistent results.
+
+I use 3 pairs on the daily charts (chart time frame is actually irrelevant): EURJPY, EURUSD, USDJPY. This gives me a hedge between the 3 positions.
+
+At the opening hour of Forex trading (5pm EST Sunday for me) I place both a pending buy-stop and sell-stop order 30 pips away from the opening price for each pair.
+
+I place stop-loss at 50 pips and take-profit at 150 pips for each. I also instruct MT4 to use a trailing stop of 500 points (50 pips) once the position moves in to profit.
+
+That's it.
+
+I now wait for 1 to 3 orders to fill and either hit target or stop. If it hits stop I will re-enter a new pending order the same as the one just stopped.
+
+If my targets are hit... GREAT! If not, at Friday 3pm EST I close all open positions and cancel any open pending orders.
+
+Position size for me is 1% of account size on a 50 pip stop loss for each position.
+
+Consistent results with literally only a few MINUTES per week of management.
+
 -----------
 
-This sample includes:
+## Note
 
-* README.md - this file
-* buildspec.yml - this file is used by AWS CodeBuild to package your
-  service for deployment to AWS Lambda
-* app.js - this file contains the sample Node.js code for the web service
-* index.js - this file contains the AWS Lambda handler code
-* template.yml - this file contains the AWS Serverless Application Model (AWS SAM) used
-  by AWS CloudFormation to deploy your service to AWS Lambda and Amazon API
-  Gateway.
-* tests/ - this directory contains unit tests for your application
-* template-configuration.json - this file contains the project ARN with placeholders used for tagging resources with the project ID
+This version doesn't implement the trailing stop.
 
-What Do I Do Next?
-------------------
+## Install (local)
 
-If you have checked out a local copy of your repository you can start making
-changes to the sample code.  We suggest making a small change to app.js first,
-so you can see how changes pushed to your project's repository are automatically
-picked up by your project pipeline and deployed to AWS Lambda and Amazon API Gateway.
-(You can watch the pipeline progress on your AWS CodeStar project dashboard.)
-Once you've seen how that works, start developing your own code, and have fun!
+Clone the repository
 
-To run your tests locally, go to the root directory of the
-sample code and run the `npm test` command, which
-AWS CodeBuild also runs through your `buildspec.yml` file.
+	git clone git@github.com:26medias/bot-lazy-trader.git
 
-To test your new code during the release process, modify the existing tests or
-add tests to the tests directory. AWS CodeBuild will run the tests during the
-build stage of your project pipeline. You can find the test results
-in the AWS CodeBuild console.
+Open a console, `cd` into the directory, then install the dependencies:
 
-Learn more about AWS CodeBuild and how it builds and tests your application here:
-https://docs.aws.amazon.com/codebuild/latest/userguide/concepts.html
+	npm install
 
-Learn more about AWS Serverless Application Model (AWS SAM) and how it works here:
-https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md
+Create env vars to save your Oanda API key & your Oanda Account Number (or hard-code them in app.js line 18 & 19):
 
-AWS Lambda Developer Guide:
-http://docs.aws.amazon.com/lambda/latest/dg/deploying-lambda-apps.html
+	OANDA_KEY=13a5f4284fa8598ac37c4r5e0ef0fa3a-cr45169bceer7b1318c0cde3292o15e9
+	OANDA_ACC=101-001-3387465-001
 
-Learn more about AWS CodeStar by reading the user guide, and post questions and
-comments about AWS CodeStar on our forum.
+Test locally:
 
-User Guide: http://docs.aws.amazon.com/codestar/latest/userguide/welcome.html
+	node test
 
-Forum: https://forums.aws.amazon.com/forum.jspa?forumID=248
+Unless it's sunday 5pm EST, no positions will be opened.
 
-What Should I Do Before Running My Project in Production?
-------------------
+You can force the code to open positions as if it was time to trade, to ensure that your settings are correct. In app.js on line 15, change `testMode` from `false` to `true`.
 
-AWS recommends you review the security best practices recommended by the framework
-author of your selected sample application before running it in production. You
-should also regularly review and apply any available patches or associated security
-advisories for dependencies used within your application.
+## Settings
 
-Best Practices: https://docs.aws.amazon.com/codestar/latest/userguide/best-practices.html?icmpid=docs_acs_rm_sec
+Open app.js to edit the settings. You can edit:
+
+- Test mode (to force taking positions no matter what day/time it is)
+- Risk per position (default at %)
+- The pairs to trade (Default: "EUR_USD","EUR_JPY","USD_JPY" but you can add more)
+- The timezone to use (defaut is America/New_York)
+- The day & time that are valid to open positions (default sunday at 5pm)
+- The limit distance (default 30)
+- The take-profit distance (default 150)
+- The stop-loss distance (default 50)
+
+## Deployment on AWS Lambda
+
+On your AWS console, open **CodeStar**, and filter to only show the templates for Web Services in NodeJS, and select the "AWS Lambda" template.
+
+![CodeStart Step 1](https://i.imgur.com/SOSZRlz.png)
+
+Select a name, then connect your github account. 
+
+![CodeStart Step 1](https://i.imgur.com/v0voCk4.png)
+
+Click **Next** until the end. Leave everything as default.
+
+CodeStar will create a new github repository on your github account. It might take a few minutes.
+
+## Clone the github repository you just created with CodeStar.
+
+Copy the following files into your repository:
+
+- app.js
+- bot.js
+- core.js
+- index.js
+- oanda.js
+- package.json
+- test.js
+- .gitignore
+- buildspec.yml
+
+## Deploy
+
+To deploy, just push to github. CodeStar will monitor your github repository and trigger a rebuild of your lambda function everytime there is a new commit to `master`.
+
+	git add --all && git commit -m "Base code" && git push
+
+## Configure your lambda function
+
+By default, your lambda function has a 3 seconds timeout & barely any memory allocated. That won't work for this.
+
+Go to your AWS console, then open AWS Lambda.
+
+Look for your bot in the list:
+
+![CodeStart Step 1](https://i.imgur.com/uPDflTK.png)
+
+When you are on your bot's lambda settings, scroll down until you see **Basic Settings**:
+
+![CodeStart Step 1](https://i.imgur.com/BKgjTMv.png)
+
+Even though AWS will charge you more when you use more memory, you also get charged for the execution time. Counter-intuitively, it's usually cheaper to allocate more memory, as it speeds up the execution time quite significantly.
+
+Here are my settings:
+
+![CodeStart Step 1](https://i.imgur.com/YkY3JN2.png)
+
+Now you'll want to setup the env vars, to provide the Oanda API key & account number without having to hard-code them in your code and risk accidentally pushing them to github.
+
+Scroll back up and locate ""
+
+Create the `OANDA_KEY` and `OANDA_ACC` env vars, allong with their values:
+
+![CodeStart Step 1](https://i.imgur.com/jR35jaA.png)
+
+There is a link on your OANDA fxTrade account profile page titled “Manage API Access” (My Account -> My Services -> Manage API Access). From there, you can generate a personal access token to use with the OANDA API, as well as revoke a token you may currently have.
+
+Don't forget to save, and you're ready to test.
+
+## Testing your AWS Lambda deployment
+
+Scroll all the way up, locate the test UI and click "Select a test event":
+
+![CodeStart Step 1](https://i.imgur.com/Y6pjTYL.png)
+
+Create a new test.
+Leave the parameters empty (we don't need any), and give it a neme, then click **Create**:
+
+![CodeStart Step 1](https://i.imgur.com/0YaUvMM.png)
+
+Now select & execute your test:
+
+![CodeStart Step 1](https://i.imgur.com/xOo54wn.png)
