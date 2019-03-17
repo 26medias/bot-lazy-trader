@@ -178,7 +178,7 @@ app.get('/', function(req, res) {
 			}
 		});
 	} else {
-		console.log("It's "+moment().format("dddd ha")+", it's not the right time to trade...");
+		console.log("It's "+moment().tz(TIMEZONE).format("dddd ha")+", it's not the right time to trade...");
 		res.send({});	// End
 	}
 	

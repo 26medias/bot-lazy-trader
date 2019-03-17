@@ -43,6 +43,8 @@ Create env vars to save your Oanda API key & your Oanda Account Number (or hard-
 	OANDA_KEY=13a5f4284fa8598ac37c4r5e0ef0fa3a-cr45169bceer7b1318c0cde3292o15e9
 	OANDA_ACC=101-001-3387465-001
 
+(invalid keys & acc number, just for the example. Replace with your owns.)
+
 Test locally:
 
 	node test
@@ -101,7 +103,9 @@ To deploy, just push to github. CodeStar will monitor your github repository and
 It takes a few minutes for your code to deploy & build on lambda.
 
 You can follow the deployment and investigate any deployment issues by looking at your CodePipeline console.
-Open CodePipeline, locate your bot, and the UI is pretty self-explanatory.
+Open CodePipeline, locate your bot, and the UI is pretty self-explanatory:
+
+![CodeStart Step 1](https://i.imgur.com/rnn5Qkz.png)
 
 Once deployed, you can setup & test your bot.
 
@@ -128,9 +132,9 @@ Here are my settings:
 
 Now you'll want to setup the env vars, to provide the Oanda API key & account number without having to hard-code them in your code and risk accidentally pushing them to github.
 
-Scroll back up and locate ""
+Scroll back up and locate *Environment variables*:
 
-Create the `OANDA_KEY` and `OANDA_ACC` env vars, allong with their values:
+Create the `OANDA_KEY` and `OANDA_ACC` env vars, along with their values:
 
 ![CodeStart Step 1](https://i.imgur.com/jR35jaA.png)
 
@@ -152,3 +156,39 @@ Leave the parameters empty (we don't need any), and give it a neme, then click *
 Now select & execute your test:
 
 ![CodeStart Step 1](https://i.imgur.com/xOo54wn.png)
+
+
+## Schedule the execution of your code
+
+In your AWS console, open CloudWatch.
+
+Go to Events > Rules, then click *Create Rule*:
+
+![CodeStart Step 1](https://i.imgur.com/KtwGhp8.png)
+
+Select *schedule* then *Cron expression*.
+
+I asked Gogole to convert 5pm EST to UTC, ended up with 9pm UTC, so I setup the rule: Execute once every sunday at 9pm:
+
+	0 21 ? * SUN *
+
+I'm not 100% of this, so we'll see if this executes at the right time. Pretty sure that won't work when daylight saving changes again in EST or UTC. Executing once per hour might be a safer bet to test. The bot won't trade if it's not the right time anyway and your usage will be covered by the AWS free tier if you have nothing else running:
+
+	0/60 * ? * SUN *
+
+Check  [the official doc](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html) to understand the cron format.
+
+If you want to execute your bot every hour Monday to Friday for example, you'd use:
+
+	0/60 * ? * MON-FRI *
+
+On the right side, select your lambda function:
+
+![CodeStart Step 1](https://i.imgur.com/iqEHuGk.png)
+
+
+Leave everything as default and click **Configure Details**
+
+On the next step, give your rule a name, a description, then click **Create**.
+
+![CodeStart Step 1](https://i.imgur.com/H2qX4n0.png)
