@@ -98,6 +98,14 @@ To deploy, just push to github. CodeStar will monitor your github repository and
 
 	git add --all && git commit -m "Base code" && git push
 
+It takes a few minutes for your code to deploy & build on lambda.
+
+You can follow the deployment and investigate any deployment issues by looking at your CodePipeline console.
+Open CodePipeline, locate your bot, and the UI is pretty self-explanatory.
+
+Once deployed, you can setup & test your bot.
+
+
 ## Configure your lambda function
 
 By default, your lambda function has a 3 seconds timeout & barely any memory allocated. That won't work for this.
