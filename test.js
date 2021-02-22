@@ -7,8 +7,7 @@ var server = require('http').createServer(app);
 // Start the local server to simulate AWS Lambda
 server.listen(port, function() {
 	console.log('Server started on port '+port);
-	
-	
+
 	var tests = {}
 	tests = {
 		api:	function(endpoint, params, callback) {
